@@ -36,9 +36,9 @@ Thankfully, I'm not starting this project with a completely blank slate. Since t
 A Voronoi diagram is a pattern of cells generated from an assortment of points. The bounds of the cells are generated around each of the points based on the proximity of any one of the points to any other one, effectively creating edges along the bounds of equidistance between input points. The result is a collection of convex polygons of variable dimensions, and you can already see how this might lead to interesting shapes for debris.
 <p align="center">
 <image src="../assets/img/smolonoi.gif"></image>
-
-<small>[TomazTsql](https://tomaztsql.wordpress.com/2021/11/01/little-useless-useful-r-functions-interactive-voronoi-diagram-generator-using-r-and-x11/)</small>
 </p>
+
+[TomazTsql](https://tomaztsql.wordpress.com/2021/11/01/little-useless-useful-r-functions-interactive-voronoi-diagram-generator-using-r-and-x11/)
 
 Adding an extra dimension to this diagram involves applying the same rules but to 3D points in a volumetric container. Of course, implementing this in code is nothing trivial, so I opted to use [Voro++](https://github.com/chr1shr/voro/tree/master), a C++ library for generating 3D voronoi diagrams. 
 
