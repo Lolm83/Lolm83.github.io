@@ -48,9 +48,7 @@ Adding an extra dimension to this diagram involves applying the same rules but t
 
 I generate the diagram once at the beginning of the program using the library's ```voro::container```. Then, for each face of each cell, I cache a single point on the face and its normal in a plane struct to feed into my mesh splitter later.
 
-<details>
-  <summary> Container Generation & Plane Collection Code </summary>
-
+```cpp
  int i;
  double x, y, z;
  voro::container con(min_x, max_x, min_y, max_y, min_z, max_z, n_x, n_y, n_z, false, false, false, 8);
@@ -71,8 +69,8 @@ I generate the diagram once at the beginning of the program using the library's 
          if (con.compute_cell(cell, cla))
          {               
              std::vector<glm::vec3>cell_face_offsets;
-
-             // Get all vertices of the cell
+             
+             //Get all vertices of the cell
              std::vector<double> vertices;
              cell.vertices(vertices);
 
@@ -108,9 +106,7 @@ I generate the diagram once at the beginning of the program using the library's 
              cell_plane_bounds.push_back(cell_planes); 
          }
      while (cla.inc());
-
-
-</details>
+```
 
 <small>(Fair warning to anyone seeking to do the same, Voro++ is kind of odd and most of the documentation is for a linux-based output program, so prioritize the Github documentation over their website since its more up to date.)</small>
 
@@ -268,7 +264,7 @@ I used ```std::unordered_map```s for this step because I could tweak the custom 
         edges[e].v[0] = vert_to_id[vertices[edges[e].v[0]].v];
         edges[e].v[1] = vert_to_id[vertices[edges[e].v[1]].v];
         if (edges[e].v[1] == edges[e].v[0])
-            {/* throw an error or something*/}
+            {/* throw an error because you made an ouroboros*/}
         else
             ++it;        
     }
@@ -332,7 +328,9 @@ std::vector<uint16_t> TriangulateFace(const std::vector<glm::vec2>& sequential_v
 ```
 All thats left is to add these triangles as ```ClipFace```s with the plane's normal to the mesh, and the hole is filled.
 
-![alt text](../assets/media/weekendcrunch.png)
+![alt text](../assets/img/weekendcrunch.png)
+
+
 
 **Break a mesh by splitting off of 3D Voronoi graph**
 
