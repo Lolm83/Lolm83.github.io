@@ -11,7 +11,7 @@ author: Noah Modli-Gorodetsky
 
 **Abstract**
 -
-For me, nothing brings a game more cohesion than a world that feels *tangible*. And ever since I decided to study game programming, my goal has been to learn new ways to re-create that feeling myself. It is to this end that I spent the last 8 weeks building a **Procedural Destruction System** for 3D meshes.
+For me, nothing brings a game more cohesion than a world that feels *tangible*. And ever since I decided to study game programming, my goal has been to learn new ways to re-create that feeling myself. It is to this end that I spent the last 8 weeks building a **Procedural Destruction System** for convex 3D meshes.
 
 My goal with this blog post is to give a broad overview of how I went about destroying 3D meshes, and hopefully outline enough theory and show enough code that someone who reads this could give it a try themselves. 
 
@@ -115,4 +115,233 @@ I generate the diagram once at the beginning of the program using the library's 
 
 <small>(Fair warning to anyone seeking to do the same, Voro++ is kind of odd and most of the documentation is for a linux-based output program, so prioritize the Github documentation over their website since its more up to date.)</small>
 
-**
+**Mesh Splitter**
+-
+
+This was hands down the trickiest part of this project for me to accomplish. 
+
+The splitter works on the basic principle of visible and non-visible elements of the mesh, and the ownership of ```Vertices``` by ```Edges``` by ```Faces```, so I created structs that can track this information in addition to what is typically expected from these variables. For a concrete example of the pseudocode for these structs and an overview of the splitting process, look to [this paper](https://www.geometrictools.com/Documentation/ClipMesh.pdf).
+
+The star of the show is the ```Clipper``` class, which is responsible for making sense of all of these structs and outputting a complete mesh, cut along an input plane. The process for splitting a mesh is as follows:
+
+In the clipper's constructor, I feed it the relevant mesh data (vertices, indices, normals) to process. The clipper then creates ```std::vectors``` of the appropriate Clip structs based off the mesh data to be used in the following step, which is clipping the mesh against the plane.
+
+```cpp
+int Clipper::ClipWithPlane(ClipPlane p) 
+{ 
+    switch (ProcessVertices(p))
+    {
+        case 1:
+            return 1; // everything is included, use the original mesh
+        case -1:
+            return -1; // everything is cut, delete the mesh
+    }
+    ProcessEdges(p);
+    ProcessFaces(p);
+    return 0;
+}
+```
+It returns an int as an early out, allowing the system that called it to continue without clipping anything if it isn't necessary, although that behaviour needs to be handled by the system that called it. The real magic happens in the 3 functions within the method. 
+The first two are fairly straightforward, ```ProcessVertices()``` checks each vertex's signed distance to the plane and labels it ```visible``` if that distance is positive, and ```non-visible``` if it is negative. If all vertices are visible, ```return 1``` for early out, if all are not visible, ```return -1```. 
+Assuming an early out is not taken, ```ProcessEdges()``` will, for each edge, once more find the signed distance of the vertices comprising it. Then, depending on the results it will do the following:
+
+```cpp 
+// signed distances
+ float sd0 = plane.SignedDistance(vertices[e.v[0]].v);
+ float sd1 = plane.SignedDistance(vertices[e.v[1]].v);
+ 
+ if (sd0 <= 0 && sd1 <= 0)
+     {...continue;} // cull edge, remove from faces sharing it and make non-visible
+ 
+ if (sd0 >= 0 && sd1 >= 0) 
+    continue; // edge is not clipped.
+
+ if () (sd0 > sd1 || sd0 < sd1)
+    { 
+      /* create new vertex */
+      /* new vertex = intersect of the edge with the plane */
+      /* replace negative sd vertex with the new vertex */
+    } 
+    // keep visible point, replace non-visible point with intersect w/plane
+ ```
+
+```ProcessFaces()``` on the other hand, is pretty convoluted. It is important to know that I'm working with a renderer for triangulated meshes, so going forward a 'face' will be referring to a single triangle that the mesh is composed of, not the entire geometrical face. ```ProcessFaces()``` has multiple responsibilities. 
+
+- Identify modified faces and verify that all edges are sequential (face is closed).
+- For any open faces :
+  - Append a new edge connecting the disconnected edges.
+  - Add copy of appended edge to "plane face" which will cover the hole created by the plane clip.
+  - For newly closed faces with 4 edges, split them into 2 faces of 3 edges. [ ] = [/]
+- For the "plane face" :
+  - Reorder appended edges counter clockwise to plane
+  - Correct vertices for float imprecision
+  - Triangulate the new face using CDT (Constrained Delauney Triangulation).
+
+Any face not clipped in its entirety is still visible, and by the end of ```ProcessFaces()```, all faces still visible will make up the final mesh. To identifying modified faces, I iterate through all the currently visible faces and test their edges to ensure each vertex appears *exactly twice*. I do not need to ensure all the edges are sequential in this case, since they are fresh from the mesh and have at most had edges removed or shortened, but not appended or reversed. And since faces are triangular, it is impossible to cut it in a way where more than one edge is completely removed without culling the face entirely, so that solves that issue too.
+
+```cpp
+bool Clipper::GetOpenPolyLine(ClipFace f, int& start, int& end) // assumes all edges are sequential
+{
+    if (f.f_edges.empty()) return false;
+
+   // if a triangular face is complete, all vertices should occur twice
+    for (auto fe : f.f_edges)
+    {
+        vertices[edges[fe].v[0]].occurs++;
+        vertices[edges[fe].v[1]].occurs++;
+    }
+   start = -1; 
+   end = -1;
+   for (auto fe : f.f_edges)
+   {
+       int i0 = edges[fe].v[0], i1 = edges[fe].v[1];
+       if (vertices[i0].occurs == 1)
+           end = i0;
+       if (vertices[i1].occurs == 1) 
+           start = i1;
+   }
+   return start != -1; // true if open, false if closed
+}
+```
+
+
+When finding an **open face**, I track the two vertices that the face began and ended with, which can be gleaned from the lone vertices' order in the edge they were included in (since, again, everything is still sequential)
+```cpp
+  int ..., start, end;
+  if (GetOpenPolyLine(face, ..., start, end)) 
+  {                
+    // polyline is open, close it
+    ClipEdge closer(start, end, face);
+    uint16_t edge_idx = edges.size();
+    edges.push_back(closer);
+    //...
+  }
+```
+After appending the freshly created edge to the face, I make sure to add a copy of the edge to the **'plane face'**, but with the order of the vertices reversed in order to maintain the same rotational sense on the adjacent face. By resolving all the open faces and adding their new edges to the 'plane face', I end up with a polygon that traces the outline of the hole left by the plane cut.
+
+![alt text](../assets/img/coob.png)
+```cpp
+    // add edge to new face (normals and vertices will need to change, so using the same edge is incovenient)
+    ClipEdge dupe(closer); 
+    uint16_t dupe_id = edges.size(); 
+
+    // reverse order to maintain rotational sense on the adjacent face
+    auto temp = dupe.v[0];
+    dupe.v[0] = dupe.v[1];
+    dupe.v[1] = temp; 
+    
+    // add edge to plane_face
+    edges.push_back(dupe); 
+    plane_face.f_edges.push_back(dupe_id); 
+```
+
+After appending, some faces will have exactly 3 edges, and I don't need to do any extra work to make them mesh ready. However, some of the faces will have **exactly 4 edges** instead, as a result of having one or more edges shortened but none removed entirely. The solution I came to was that, rather than congregating all of the polygons that make up one geometric face and triangulating that, I would perform a simple triangulation on each of these predictable quads. 
+
+![alt text](../assets/img/coloob.png)
+
+The 4-edged face is made non-visible, and two new faces are added to the mesh comprising of two of the 4 edges each and an additional edge appended connecting them, again placed in correct rotational sense relative to the other edges. Also, the faces take the same normal as the 4-edged one.
+
+The result of this is an almost complete mesh, with the exception of the new geometric face created by the plane cut, which makes it look like there's a hole though it.
+![alt text](../assets/media/hollow.png)
+
+To fill this hole, I need to use the 'plane face', which is currently just a loose collection of a variable number of edges provided by the previous steps. The first priority is to remap these edges to new vertices in order to account for float imprecision in the previous steps. This ensures that the program doesn't return a false positive when it checks if the 'plane face' is open, on account of the vertices being different because of imprecision.
+
+I used ```std::unordered_map```s for this step because I could tweak the custom **Hash** and **Equal** functions until I was satisfied with the level of precision of the approximation. To achieve a closed face at any level of precision, you could make tiny edges between each of the non-connecting vertices, but that results in more triangles, and small edges are the cause of serious stability issues for my system, as I will later discuss.
+
+```cpp
+    // Index each id to the same vertex
+    std::unordered_map<uint16_t, glm::vec3> id_to_vert; 
+    for (auto elem : close_face.f_edges)
+    {
+        id_to_vert[edges[elem].v[0]] = vertices[edges[elem].v[0]].v;
+        id_to_vert[edges[elem].v[1]] = vertices[edges[elem].v[1]].v;
+    }
+     // Build reverse map, complete approximation (should be half the size of id_to_vert when done)
+    std::unordered_map<glm::vec3, uint16_t, Vec3Hash, Vec3Equal> vert_to_id; 
+    for (const auto& [x, y] : id_to_vert)
+        vert_to_id[y] = x;
+    
+    // consolidate indices to avoid duplicates
+    for (auto it = close_face.f_edges.begin(); it != close_face.f_edges.end();)
+    {
+        const auto& e = *it;
+        edges[e].v[0] = vert_to_id[vertices[edges[e].v[0]].v];
+        edges[e].v[1] = vert_to_id[vertices[edges[e].v[1]].v];
+        if (edges[e].v[1] == edges[e].v[0])
+            {/* throw an error or something*/}
+        else
+            ++it;        
+    }
+```
+
+Now that that is taken care of, I need to triangulate this new geometric face in order to get the triangles required for drawing the mesh. Since its not a simple shape like a quad, I opted to use [artem-ogre's CDT library](https://github.com/artem-ogre/CDT) to triangulate the polygon instead. Of course, CDT in this form is only applicable to 2D polygons, so I have to get a sequential list of all the 3D vertices and project them onto the plane before plugging them into the triangulation.
+
+```cpp
+    std::vector<glm::vec3> tobe2D;
+    tobe2D.reserve(sequential_vertices.size());
+
+    for (const auto vid : sequential_vertices)
+        tobe2D.push_back(vertices[vid].v);
+
+    // map to cdtverts
+    std::unordered_map<uint16_t, uint16_t> index_key;   
+    for (uint16_t i = 0; i <= sequential_vertices.size() - 1; i++)
+    index_key[i] = sequential_vertices[i];
+
+    // perform triangulation on the face
+    std::vector<uint16_t> new_indices = TriangulateFace(plane.To2D(tobe2D, centroid));
+```
+
+I have a layer of culling where I remove collinear edges from the face to reduce triangles, but I cut it for (relative) brevity.
+
+```cpp
+std::vector<uint16_t> TriangulateFace(const std::vector<glm::vec2>& sequential_vertices)
+{   
+    if (sequential_vertices.size() < 3) return {};
+
+    std::vector<CDT::V2d<float>> cdtverts;
+    cdtverts.reserve(sequential_vertices.size());
+
+    // OPTIONAL: add a layer of culling / removing colinear edges in order to reduce triangle output from CDT.
+
+    for(int i = 0; i < sequential_vertices.size(); i++) 
+        cdtverts.push_back(CDT::V2d<float>::make(sequential_vertices[i].x, sequential_vertices[i].y));
+
+    // create edges + close loop
+    std::vector<CDT::Edge> cdtedges;
+    cdtedges.reserve(cdtverts.size());
+    for (size_t i = 0; i < cdtverts.size() - 1; ++i)
+        cdtedges.emplace_back(static_cast<CDT::VertInd>(i), static_cast<CDT::VertInd>(i + 1));
+    if (!cdtverts.empty()) 
+        cdtedges.emplace_back(static_cast<CDT::VertInd>(cdtverts.size() - 1), static_cast<CDT::VertInd>(0));
+
+    CDT::Triangulation<float> cdt;
+    cdt.insertVertices(cdtverts);
+    cdt.insertEdges(cdtedges);
+    cdt.eraseOuterTrianglesAndHoles();
+
+    std::vector<uint16_t> face_indices;
+    for (const auto& triangle : cdt.triangles)
+    {
+        face_indices.push_back(static_cast<uint16_t>(triangle.vertices[0]));
+        face_indices.push_back(static_cast<uint16_t>(triangle.vertices[1]));
+        face_indices.push_back(static_cast<uint16_t>(triangle.vertices[2]));
+    }
+    return face_indices;
+}
+```
+All thats left is to add these triangles as ```ClipFace```s with the plane's normal to the mesh, and the hole is filled.
+
+![alt text](../assets/media/weekendcrunch.png)
+
+**Break a mesh by splitting off of 3D Voronoi graph**
+
+I create a voro++ container with a number of random points placed within, configurable before runtime via ```constexpr int NUM_CELLS``` in ```Destruction.cpp```. When a voronoi-based destruction is triggered, the system attempts to create a piece of debris for each cell in the graph, aligning the graph to the point of contact with the object. The plane cuts are made using the normals of each face and a point on them, placed in local space for the mesh. 
+
+![alt text](../assets/media/Vorobreak.gif)
+
+Since this feature was added in the last week, it isn't really complete yet, more of a proof of concept. Optimization is required to reduce the stutter when performing upwards of 100 plane cuts in a single pass, and the scale & position of the debris post-cut is not accurate, leading to more mass out of nowhere. However, I've run out of time, and this version is usable enough to include in my features.
+
+Also, the debris made as a result of a plane split take on the properties of the split object's physics body, with the mass adjusted for the relative volume of the debris. 
+
+![Meshes Split](../assets/img/BEE2025-01-1713-42-17-ezgif.com-optimize.gif)
