@@ -3,7 +3,7 @@ layout: post
 title: Procedural Destruction using Plane Splitting and Voronoi Noise
 subtitle: Breda University of Applied Sciences Y2 Block B Project
 cover-img: /assets/img/banner.png
-thumbnail-img: /assets/img/meinahat.png
+thumbnail-img: /assets/img/meinahat.jpeg
 share-img: /assets/img/path.jpg
 tags: [BUas, BuasGames, Blog]
 author: Noah Modli-Gorodetsky
