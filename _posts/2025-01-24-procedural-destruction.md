@@ -5,7 +5,7 @@ subtitle: Breda University of Applied Sciences Y2 Block B Project
 cover-img: /assets/img/banner.png
 thumbnail-img: /assets/img/meinahat.png
 share-img: /assets/img/path.jpg
-tags: [BUas, BuasGames]
+tags: [BUas, BuasGames, Blog]
 author: Noah Modli-Gorodetsky
 ---
 **Abstract**
