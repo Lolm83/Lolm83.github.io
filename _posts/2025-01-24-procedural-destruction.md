@@ -110,7 +110,9 @@ I generate the diagram once at the beginning of the program using the library's 
          }
      while (cla.inc());
 ```
+
 </details>
 
 <small>(Fair warning to anyone seeking to do the same, Voro++ is kind of odd and most of the documentation is for a linux-based output program, so prioritize the Github documentation over their website since its more up to date.)</small>
 
+**
