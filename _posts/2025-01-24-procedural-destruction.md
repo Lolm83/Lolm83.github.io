@@ -3,12 +3,11 @@ layout: post
 title: Procedural Destruction using Plane Splitting and Voronoi Noise
 subtitle: Breda University of Applied Sciences Y2 Block B Project
 cover-img: /assets/img/banner.png
-thumbnail-img: /assets/img/thumb.png
+thumbnail-img: /assets/img/meinahat.png
 share-img: /assets/img/path.jpg
 tags: [BUas, BuasGames]
 author: Noah Modli-Gorodetsky
 ---
-
 **Abstract**
 -
 For me, nothing brings a game more cohesion than a world that feels *tangible*. And ever since I decided to study game programming, my goal has been to learn new ways to re-create that feeling myself. It is to this end that I spent the last 8 weeks building a **Procedural Destruction System** for convex 3D meshes.
@@ -112,7 +111,6 @@ I generate the diagram once at the beginning of the program using the library's 
 
 **Mesh Splitter**
 -
-
 This was hands down the trickiest part of this project for me to accomplish. 
 
 The splitter works on the basic principle of visible and non-visible elements of the mesh, and the ownership of ```Vertices``` by ```Edges``` by ```Faces```, so I created structs that can track this information in addition to what is typically expected from these variables. For a concrete example of the pseudocode for these structs and an overview of the splitting process, look to [this paper](https://www.geometrictools.com/Documentation/ClipMesh.pdf).
@@ -160,6 +158,7 @@ Assuming an early out is not taken, ```ProcessEdges()``` will, for each edge, on
     // keep visible point, replace non-visible point with intersect w/plane
  ```
 
+
 ```ProcessFaces()``` on the other hand, is pretty convoluted. It is important to know that I'm working with a renderer for triangulated meshes, so going forward a 'face' will be referring to a single triangle that the mesh is composed of, not the entire geometrical face. ```ProcessFaces()``` has multiple responsibilities. 
 
 - Identify modified faces and verify that all edges are sequential (face is closed).
@@ -171,6 +170,8 @@ Assuming an early out is not taken, ```ProcessEdges()``` will, for each edge, on
   - Reorder appended edges counter clockwise to plane
   - Correct vertices for float imprecision
   - Triangulate the new face using CDT (Constrained Delauney Triangulation).
+
+**Open Faces**
 
 Any face not clipped in its entirety is still visible, and by the end of ```ProcessFaces()```, all faces still visible will make up the final mesh. To identifying modified faces, I iterate through all the currently visible faces and test their edges to ensure each vertex appears *exactly twice*. I do not need to ensure all the edges are sequential in this case, since they are fresh from the mesh and have at most had edges removed or shortened, but not appended or reversed. And since faces are triangular, it is impossible to cut it in a way where more than one edge is completely removed without culling the face entirely, so that solves that issue too.
 
@@ -235,6 +236,8 @@ After appending, some faces will have exactly 3 edges, and I don't need to do an
 ![alt text](../assets/img/coloob.png)
 
 The 4-edged face is made non-visible, and two new faces are added to the mesh comprising of two of the 4 edges each and an additional edge appended connecting them, again placed in correct rotational sense relative to the other edges. Also, the faces take the same normal as the 4-edged one.
+
+**Plane Face**
 
 The result of this is an almost complete mesh, with the exception of the new geometric face created by the plane cut, which makes it look like there's a hole though it.
 
@@ -330,16 +333,138 @@ All thats left is to add these triangles as ```ClipFace```s with the plane's nor
 
 ![alt text](../assets/img/weekendcrunch.png)
 
+One last note on the splitter, the way you handle translating all the visible faces, edges, and vertices into a usable mesh is super case dependant. The renderer you use is the biggest factor here. But if your renderer, like mine, draws meshes from their central point, make sure you track the displacement from the original center to the new center somewhere so you can place your debris correctly in world space in the next step.
+
+**Triggering Destruction and Making Debris**
+-
+
+Now that I had Plane Splitting working, functional destruction is just moments away.
+
+The first step is to trigger the destruction from a point of contact with the object. To this end, I used the engine's [Jolt Physics](https://github.com/jrouwe/JoltPhysics) integration and used the contact point of a raycast against an AABB bounding box to trigger the shattering.
+
+Since all the Jolt data is in world space, I also offset all the positional data and rotate both the plane's normal and the offset point of contact based on the mesh's rotation in order to convert the plane into local space for the mesh.
+
+```cpp
+std::vector<ClipPlane> chunk;
+std::vector<ClipPlane> chunk2;
+
+auto plane_n = glm::rotate(glm::inverse(t.GetRotation()), glm::normalize(flag.slicing_normal));
+auto plane_n2 = glm::rotate(glm::inverse(t.GetRotation()), -glm::normalize(flag.slicing_normal));
+
+chunk.push_back(
+    ClipPlane(plane_n, glm::rotate(glm::inverse(t.GetRotation()), flag.point_of_contact - t.GetTranslation())));
+
+chunk2.push_back(
+    ClipPlane(plane_n2, glm::rotate(glm::inverse(t.GetRotation()), flag.point_of_contact - t.GetTranslation())));
+```
 
 
-**Break a mesh by splitting off of 3D Voronoi graph**
+Once I have all the planes I'll be clipping with for each chunk of debris, I can apply the cuts to a mesh and get the two pieces of debris corresponding to the plane. 
 
-I create a voro++ container with a number of random points placed within, configurable before runtime via ```constexpr int NUM_CELLS``` in ```Destruction.cpp```. When a voronoi-based destruction is triggered, the system attempts to create a piece of debris for each cell in the graph, aligning the graph to the point of contact with the object. The plane cuts are made using the normals of each face and a point on them, placed in local space for the mesh. 
+```cpp
+bee::Entity bee::DestructionSystem::NewDebris(std::vector<ClipPlane> planes,
+                                              glm::vec3 point_of_contact,
+                                              float force,
+                                              const MeshRenderer& meshRenderer,
+                                              const Transform& t,
+                                              uint32_t body_ID)
+{
+    // get the debris started
+    auto ent = /* make a new ECS entity */
+    auto& mr = /* make a new mesh renderer */
+    auto mesh = /* make a new mesh */
+    mr.Mesh = mesh;
+    mr.Material = meshRenderer.Material;
 
-![alt text](../assets/media/Vorobreak.gif)
+    // center of new mesh in local space after split
+    glm::vec3 new_center = glm::vec3(0);
 
-Since this feature was added in the last week, it isn't really complete yet, more of a proof of concept. Optimization is required to reduce the stutter when performing upwards of 100 plane cuts in a single pass, and the scale & position of the debris post-cut is not accurate, leading to more mass out of nowhere. However, I've run out of time, and this version is usable enough to include in my features.
+    bool clipped_away = false;
 
-Also, the debris made as a result of a plane split take on the properties of the split object's physics body, with the mass adjusted for the relative volume of the debris. 
+    for (const auto& p : planes)
+    {
+        Clipper clippy(mr.Mesh);
+
+        switch (clippy.ClipWithPlane(p))
+        {
+            case -1: // fully clipped away
+                Engine.ECS().DeleteEntity(ent);
+                clipped_away = true;
+                return ent;
+            case 1: // fully left alone
+                break;
+            case 0: // mesh splitting
+                clippy.ConvertToMesh(mr.Mesh);
+                new_center = clippy.new_center; 
+                break;
+        }
+    }
+    if (!clipped_away)
+        MakePhysicsDebris(new_center, mr.Mesh->GetPositions(), body_ID, t, point_of_contact, force, ent); 
+
+    return ent;
+}
+```
+
+The final step is in that last little bit of code, which is to create a new physics body for the debris and to inherit the parent's physics properties. This is also pretty case dependant, but I found that feeding Jolt's ```ConvexHullShape``` the vertices of the mesh does a good job here. Just make sure to place the physics body correctly in world space based on the new center of the mesh. 
+
+```cpp
+  // Copy velocity and mass-related properties
+ convex_body->SetLinearVelocity(bodyInterface.GetLinearVelocity(bid));
+ convex_body->SetAngularVelocity(bodyInterface.GetAngularVelocity(bid));
+  
+ // REPLACE W/DATA ABOUT COLLISION
+ if (force)
+ {
+      JPH::Vec3 shatter_dir =  physics::ToJolt(world_pos - poc); ;
+      JPH::Vec3 shattering_force = force * shatter_dir.Normalized(); 
+
+      bodyInterface.AddForce(convex_body->GetID(), shattering_force); 
+ }
+ ```
+ <small> Also, using the parent's angular and linear velocities along with an additional force applied helps the effect look more believable </small>
 
 ![Meshes Split](../assets/img/BEE2025-01-1713-42-17-ezgif.com-optimize.gif)
+
+When a voronoi-based destruction is triggered, the system attempts to create a piece of debris for each cell in the graph, aligning the graph to the point of contact with the object. The plane cuts are made using the normals of each face and a point on them, placed in local space for the mesh. 
+
+
+Congrats! You have fruit ninja!
+
+**Doing it with Voronoi**
+-
+
+In theory, this part is super easy. I already store all the planes I need to cut a shape by grouped up by voronoi cell. I'm able to make debris by cutting along a plane. And I can make physics bodies for the debris that fit any convex shape. What's the problem?
+
+Well first, let's just break something. 
+
+
+```cpp
+for (auto planes : cell_plane_bounds)
+{
+    std::vector<ClipPlane> chunk;
+    for (auto plane : planes)
+    {
+        glm::vec3 plane_n = glm::rotate(glm::inverse(t.GetRotation()), glm::normalize(plane.GetNormal()));
+        glm::vec3 pos = glm::rotate(glm::inverse(t.GetRotation()), plane.GetPos());
+        chunk.push_back(ClipPlane(plane_n, pos));
+    }
+    NewDebris(chunk, flag.point_of_contact, flag.destruction_force, mr, t, body.m_bodyID);
+}
+```
+![alt text](Vorobreak.gif)
+
+**The Problem:** 
+
+A 3D Voronoi Diagram with only 10 points sounds like a simple task. And yet, to get there, you have to perform well over 100 plane cuts in one frame. The slowdown is also significantly worse for higher poly models, since each vertex still needs to be checked, and each intersected edge needs to be clipped. 
+
+There's shouldn't be too much noticeable performance issues at low counts of debris, for example this video only uses 8 points, but as that number goes up, the slowdown is huge. There are also stability issues that arise with smaller edges and more triangles, as the plane cut can make incomplete faces due to float imprecision. 
+
+**Conclusion & Plans for the Future**
+-
+
+I'll admit, this was a pretty ambitious project for the 8 Weeks I had to attempt it, and as a result I really didn't leave enough time for optimization. Given the chance, my priorities are definitely solving the stability issues and optimizing the code.
+
+As far as optimization goes, some of it is my choices for certain data structures (```std::vectors``` *don't* actually solve everything), but there are large improvements that can be made algorithmically too. I highly reccomend [This Paper from NVIDIA](https://matthias-research.github.io/pages/publications/fractureSG2013.pdf) which speeds up this approach while also making it more robust *and* appicable to non-convex meshes. Its really cool, and I'm definitely gonna take a swing at it in the future. 
+
+If you've got any questions (or tips!) please feel free to reach out to me through the details provided.
