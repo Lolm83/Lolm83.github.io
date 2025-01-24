@@ -20,9 +20,9 @@ My goal with this blog post is to give a broad overview of how I went about dest
 There are many different ways to go about destruction in videogames, and techniques range from prefabricating debris to deforming vertices in the GPU. For my project, I decided on procedurally creating new meshes at runtime from a 3D Voronoi diagram.
 
 To *break down* what that means for the project, I'll basically need 3 key components.
-1. 3D Voronoi Diagram Generation
-2. Plane-Based Mesh Splitting
-3. Debris Creation from the Modified Meshes
+1. **3D Voronoi Diagram Generation**
+2. **Plane-Based Mesh Splitting**
+3. **Debris Creation from the Modified Meshes**
 
 Thankfully, I'm not starting this project with a completely blank slate. Since this project is an assignment for my study in Creative Media and Game Technologies at BUas, I'm able to use their proprietary engine to get a head start on all the boilerplate stuff, like Mesh Rendering, Physics, and an Entity Component System.
 
@@ -30,8 +30,15 @@ Thankfully, I'm not starting this project with a completely blank slate. Since t
 -
 A Voronoi diagram is a pattern of cells generated from an assortment of points. The bounds of the cells are generated around each of the points based on the proximity of any one of the points to any other one, effectively creating edges along the bounds of equidistance between input points. The result is a collection of convex polygons of variable dimensions, and you can already see how this might lead to interesting shapes for debris.
 
-![alt text](../assets/img/voronoi.gif)
-[TomazTsql](https://tomaztsql.wordpress.com/2021/11/01/little-useless-useful-r-functions-interactive-voronoi-diagram-generator-using-r-and-x11/)
+![alt text](../assets/img/smolonoi.gif)
+
+<small>[TomazTsql](https://tomaztsql.wordpress.com/2021/11/01/little-useless-useful-r-functions-interactive-voronoi-diagram-generator-using-r-and-x11/)</small>
+
+Adding an extra dimension to this diagram involves applying the same rules but to 3D points in a volumetric container. Of course, implementing this in code is nothing trivial, so I opted to use [Voro++](https://github.com/chr1shr/voro/tree/master), a C++ library for generating 3D voronoi noise. 
 
 
+![alt text](../assets/img/splot.png)
+<small> 3D Voronoi Diagram made using Voro++
+
+(Fair warning to anyone seeking to do the same, Voro++ is kind of odd and most of the documentation is for a linux-based output program, so prioritize the Github documentation over their website since its more up to date.)</small>
 
