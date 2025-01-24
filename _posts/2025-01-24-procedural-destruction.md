@@ -51,7 +51,6 @@ I generate the diagram once at the beginning of the program using the library's 
 <details>
   <summary> Container Generation & Plane Collection Code </summary>
 
-```cpp
  int i;
  double x, y, z;
  voro::container con(min_x, max_x, min_y, max_y, min_z, max_z, n_x, n_y, n_z, false, false, false, 8);
@@ -109,7 +108,7 @@ I generate the diagram once at the beginning of the program using the library's 
              cell_plane_bounds.push_back(cell_planes); 
          }
      while (cla.inc());
-```
+
 
 </details>
 
@@ -242,7 +241,8 @@ After appending, some faces will have exactly 3 edges, and I don't need to do an
 The 4-edged face is made non-visible, and two new faces are added to the mesh comprising of two of the 4 edges each and an additional edge appended connecting them, again placed in correct rotational sense relative to the other edges. Also, the faces take the same normal as the 4-edged one.
 
 The result of this is an almost complete mesh, with the exception of the new geometric face created by the plane cut, which makes it look like there's a hole though it.
-![alt text](../assets/media/hollow.png)
+
+![alt text](../assets/img/hollow.png)
 
 To fill this hole, I need to use the 'plane face', which is currently just a loose collection of a variable number of edges provided by the previous steps. The first priority is to remap these edges to new vertices in order to account for float imprecision in the previous steps. This ensures that the program doesn't return a false positive when it checks if the 'plane face' is open, on account of the vertices being different because of imprecision.
 
