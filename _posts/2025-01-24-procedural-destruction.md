@@ -173,7 +173,7 @@ Assuming an early out is not taken, ```ProcessEdges()``` will, for each edge, on
 
 **Open Faces**
 
-Any face not clipped in its entirety is still visible, and by the end of ```ProcessFaces()```, all faces still visible will make up the final mesh. To identifying modified faces, I iterate through all the currently visible faces and test their edges to ensure each vertex appears *exactly twice*. I do not need to ensure all the edges are sequential in this case, since they are fresh from the mesh and have at most had edges removed or shortened, but not appended or reversed. And since faces are triangular, it is impossible to cut it in a way where more than one edge is completely removed without culling the face entirely, so that solves that issue too.
+Any face not clipped in its entirety is still visible, and by the end of ```ProcessFaces()```, all faces still visible will make up the final mesh. To identify modified faces, I iterate through all the currently visible faces and test their edges to ensure each vertex appears *exactly twice*. I do not need to ensure all the edges are sequential in this case, since they are fresh from the mesh and have at most had edges removed or shortened, but not appended or reversed. And since faces are triangular, it is impossible to cut it in a way where more than one edge is completely removed without culling the face entirely, so that solves that issue too.
 
 ```cpp
 bool Clipper::GetOpenPolyLine(ClipFace f, int& start, int& end) // assumes all edges are sequential
@@ -452,7 +452,7 @@ for (auto planes : cell_plane_bounds)
     NewDebris(chunk, flag.point_of_contact, flag.destruction_force, mr, t, body.m_bodyID);
 }
 ```
-![alt text](Vorobreak.gif)
+![alt text](../assets/img/Vorobreak.gif)
 
 **The Problem:** 
 
