@@ -1,13 +1,13 @@
 - title: Bloom
   subtitle: Horror gardening game
-  image: ../assets/img/crepe.jpg
+  image: /assets/img/crepe.jpg
   description: "Bloom is an eerie gardening game where you grow strange, unnatural plants to feed the creature keeping you captive. Venture..."
   link: https://sjver.github.io/
   tags: [buas, unreal-engine]
 
 - title: Firefly
   subtitle: Deferred rendering engine
-  image: ../assets/img/thumby.png
+  image: /assets/img/thumby.png
   description: "I learned a lot from this project. Task working on complex software architecture and rendering techniques to direct hardware and software interaction..."
   link: https://sjver.github.io/
   tags: [buas, graphics]
@@ -21,7 +21,7 @@
 
 - title: Tonemapping
   subtitle: Tonemapping algorithms talk
-  image: ../assets/img/crepe.png
+  image: /assets/img/crepe.png
   description: "Description here..."
   link: https://sjver.github.io/
   tags: [graphics, rendering]
