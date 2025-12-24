@@ -4,6 +4,33 @@ layout: page
 
 {{ content }}
 
+<div class="projects-grid">
+  {% for project in site.data.projects %}
+    <div class="project-card">
+      <h3>{{ project.title }}</h3>
+      <p class="project-subtitle">{{ project.subtitle }}</p>
+      
+      {% if project.image %}
+        <img src="{{ project.image }}" alt="{{ project.title }}" class="project-image">
+      {% endif %}
+      
+      <p>{{ project.description }}</p>
+      
+      {% if project.link %}
+        <a href="{{ project.link }}" class="btn btn-primary">[Read More]</a>
+      {% endif %}
+      
+      {% if project.tags %}
+        <div class="project-tags">
+          {% for tag in project.tags %}
+            <span class="tag">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+
 {% assign posts = paginator.posts | default: site.posts %}
 
 <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
