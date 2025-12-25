@@ -1,22 +1,16 @@
 /* Section Headers */
-.banner-heading {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 3rem 0 2rem 0;
-  padding-bottom: 1.5rem;
-  border-bottom: 3px solid #008AFF;
-  display: inline-block;
-  letter-spacing: -0.5px;
-}
-
-h2 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 2.5rem 0 1.5rem 0;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #eee;
+.custom-heading {
+    padding: 10px;
+    /* background-color: var(--navbar-col); */
+    border-top: 3px solid var(--navbar-col);
+    border-bottom: 3px solid var(--navbar-col);
+    text-align: center;
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
 }
 
 /* Projects Grid Container */
