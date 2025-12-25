@@ -1,8 +1,8 @@
-- title: Bloom
-  subtitle: Horror gardening game
-  image: /assets/img/crepe.jpg
-  description: "Bloom is an eerie gardening game where you grow strange, unnatural plants to feed the creature keeping you captive. Venture..."
-  link: https://sjver.github.io/
+- title: Sunbeat City
+  subtitle: Solarpunk Parkour Game
+  image: /assets/img/sunbeat.png
+  description: "Sunbeat City is a First-Person Parkour game where your movements create music, becoming a soloist in a symphony shaped by your actions. My contribution was the adaptive music system and spatial audio."
+  link: https://buas.itch.io/sunbeat-city
   tags: [buas, unreal-engine]
 
 - title: Firefly
