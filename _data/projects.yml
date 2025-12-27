@@ -8,7 +8,7 @@
 - title: Procedural Destruction System
   subtitle: Custom Engine C++ Project  
   image: /assets/img/destructnail.png
-  description: "I wrote a proc"
+  description: "I wrote a procedural destruction system in C++ as part of a custom game engine project at BUas. The system allowed for the runtime destruction of any convex mesh in a 3D voronoi pattern centered around the point of collision.
   link: https://lolm83.github.io/2025-01-24-procedural-destruction/
   tags: [buas, dynamism, c++]
 
@@ -23,5 +23,12 @@
   subtitle: Tonemapping algorithms talk
   image: /assets/img/tonemapping.png
   description: "A presentation on different tonemapping algorithms, including implementation details and visual examples given by myself and Sjoerd Vermeulen at BUas."
-  link: https://sjver.github.io/
+  link: https://edubuas-my.sharepoint.com/:p:/g/personal/231291_buas_nl/ER5OdcZ77zVHhBzAyFCJV2kBn-aCu9HdkmFwSjrjIJd4Hw?e=XlKeS7
+  tags: [graphics, rendering]
+
+  - title: Mantis VR Engine
+  subtitle: Custom VR Engine feat. My destruction system
+  image: /assets/img/tonemapping.png
+  description: "I contributed to a custom c++ ECS game engine built for VR in a team of 6 programmers. My contributions were the destruction system and the physics integration. It was later used to create the game Ascension Protocol."
+  link: https://buas.itch.io/ascension-protocol
   tags: [graphics, rendering]

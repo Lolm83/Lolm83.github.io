@@ -31,7 +31,7 @@ Thankfully, I'm not starting this project with a completely blank slate. Since t
 ![alt text](../assets/img/buas.png)
 
 **Voronoi Diagram Generation**
--
+- 
 A Voronoi diagram is a pattern of cells generated from an assortment of points. The bounds of the cells are generated around each of the points based on the proximity of any one of the points to any other one, effectively creating edges along the bounds of equidistance between input points. The result is a collection of convex polygons of variable dimensions, and you can already see how this might lead to interesting shapes for debris.
 <p align="center">
 <image src="../assets/img/smolonoi.gif"></image>
