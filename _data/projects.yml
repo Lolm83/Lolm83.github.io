@@ -1,6 +1,6 @@
 - title: Sunbeat City
   subtitle: Solarpunk Parkour Game
-  image: /assets/img/sunbeat.png
+  image: /assets/img/sunbeat2.png
   description: "Sunbeat City is a First-Person Parkour game where your movements create music. My contribution was the adaptive music system and spatial audio."
   link: https://buas.itch.io/sunbeat-city
   tags: [buas, unreal-engine]
