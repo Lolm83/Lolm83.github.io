@@ -8,7 +8,7 @@
 - title: Procedural Destruction System
   subtitle: Custom Engine C++ Project  
   image: /assets/img/destructnail.png
-  description: "I learned a lot from this project. Task working on complex software architecture and rendering techniques to direct hardware and software interaction..."
+  description: "I wrote a proc"
   link: https://lolm83.github.io/2025-01-24-procedural-destruction/
   tags: [buas, dynamism, c++]
 
@@ -17,11 +17,11 @@
   image: ../assets/img/ortuss.png
   description: "I was one of 3 programmers on this project. My contribution was with enemy AI where I experimented with using Reinforcement Learning for swarming behavior"
   link: https://buas.itch.io/team-cumin
-  tags: [gameplay, co-op]
+  tags: [buas, unreal-engine, AI]
 
 - title: Tonemapping
   subtitle: Tonemapping algorithms talk
-  image: /assets/img/crepe.png
-  description: "Description here..."
+  image: /assets/img/tonemapping.png
+  description: "A presentation on different tonemapping algorithms, including implementation details and visual examples given by myself and Sjoerd Vermeulen at BUas."
   link: https://sjver.github.io/
   tags: [graphics, rendering]
