@@ -3,20 +3,20 @@
   image: /assets/img/sunbeat2.png
   description: "Sunbeat City is a First-Person Parkour game where your movements create music. My contribution was the adaptive music system and spatial audio."
   link: https://buas.itch.io/sunbeat-city
-  tags: [buas, unreal-engine]
+  tags: [buas, unreal-engine, audio]
 
 - title: Procedural Destruction System
   subtitle: Custom Engine C++ Project  
-  image: /assets/img/thumby.png
+  image: /assets/img/destructnail.png
   description: "I learned a lot from this project. Task working on complex software architecture and rendering techniques to direct hardware and software interaction..."
-  link: https://sjver.github.io/
-  tags: [buas, graphics]
+  link: https://lolm83.github.io/2025-01-24-procedural-destruction/
+  tags: [buas, dynamism, c++]
 
-- title: IgKnighted
-  subtitle: Co-op twinstick shooter
-  image: ../assets/img/thumb.png
-  description: "Description here..."
-  link: https://sjver.github.io/
+- title: ORTUS
+  subtitle: Robot Twinstick Shooter
+  image: ../assets/img/ortuss.png
+  description: "I was one of 3 programmers on this project. My contribution was with enemy AI where I experimented with using Reinforcement Learning for swarming behavior"
+  link: https://buas.itch.io/team-cumin
   tags: [gameplay, co-op]
 
 - title: Tonemapping
