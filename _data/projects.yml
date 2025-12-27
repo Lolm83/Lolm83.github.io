@@ -4,7 +4,7 @@
   description: "Sunbeat City is a First-Person Parkour game where your movements create music. My contribution was the adaptive music system and spatial audio."
   link: https://buas.itch.io/sunbeat-city
   tags: [buas, unreal-engine, audio]
-
+ 
 - title: Procedural Destruction System
   subtitle: Custom Engine C++ Project  
   image: /assets/img/destructnail.png
