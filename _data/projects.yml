@@ -5,8 +5,8 @@
   link: https://buas.itch.io/sunbeat-city
   tags: [buas, unreal-engine]
 
-- title: Firefly
-  subtitle: Deferred rendering engine
+- title: Procedural Destruction System
+  subtitle: Custom Engine C++ Project  
   image: /assets/img/thumby.png
   description: "I learned a lot from this project. Task working on complex software architecture and rendering techniques to direct hardware and software interaction..."
   link: https://sjver.github.io/
