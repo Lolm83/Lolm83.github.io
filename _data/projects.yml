@@ -5,7 +5,7 @@
   link: https://buas.itch.io/sunbeat-city
   tags: [buas, unreal-engine, audio]
  
-- title: Procedural Destruction System
+- title: Procedural Destruction System 
   subtitle: Custom Engine C++ Project  
   image: /assets/img/destructnail.png
   description: "I wrote a procedural destruction system in C++ as part of a custom game engine project at BUas. The system allowed for the runtime destruction of any convex mesh in a 3D voronoi pattern centered around the point of collision.
