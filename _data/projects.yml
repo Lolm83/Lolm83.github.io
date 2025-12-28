@@ -28,7 +28,7 @@
 
   - title: Mantis VR Engine
   subtitle: Custom VR Engine feat. My destruction system
-  image: /assets/img/tonemapping.png
+  image: /assets/img/demointer.gif
   description: "I contributed to a custom c++ ECS game engine built for VR in a team of 6 programmers. My contributions were the destruction system and the physics integration. It was later used to create the game Ascension Protocol."
   link: https://buas.itch.io/ascension-protocol
   tags: [graphics, rendering]
