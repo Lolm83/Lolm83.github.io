@@ -8,7 +8,7 @@
 - title: Procedural Destruction System 
   subtitle: Custom Engine C++ Project  
   image: /assets/img/destructnail.png
-  description: "I wrote a procedural destruction system in C++ as part of a custom game engine project at BUas. The system allowed for the runtime destruction of any convex mesh in a 3D voronoi pattern centered around the point of collision.
+  description: "I wrote a procedural destruction system in C++ as part of a custom game engine project at BUas. The system allowed for the runtime destruction of any convex mesh in a 3D voronoi pattern centered around the point of collision."
   link: https://lolm83.github.io/2025-01-24-procedural-destruction/
   tags: [buas, dynamism, c++]
 
